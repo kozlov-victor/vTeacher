@@ -653,6 +653,132 @@ var ObjectPool = (function () {
 
 /***/ }),
 
+/***/ 121:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return httpClient; });
+/* harmony import */ var _engine_misc_object__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(14);
+
+var objectToQuery = function (o) {
+    if (o === undefined || o === null)
+        return '';
+    if (o instanceof FormData)
+        return o;
+    var paramsArr = [];
+    if (typeof o === 'string' || typeof o === 'number')
+        return o.toString();
+    Object.keys(o).forEach(function (key) {
+        paramsArr.push([key, encodeURIComponent(o[key])]);
+    });
+    return paramsArr.map(function (item) { return [item[0] + '=' + item[1]]; }).join('&');
+};
+var request = function (data) {
+    var abortTmr;
+    var resolved = false;
+    data.method = data.method || 'get';
+    if (data.data && data.method === 'get')
+        data.url += '?' + objectToQuery(data.data);
+    var xhr = new XMLHttpRequest();
+    if (data.setup)
+        data.setup(xhr);
+    var resolveFn = _engine_misc_object__WEBPACK_IMPORTED_MODULE_0__[/* noop */ "e"], rejectFn = _engine_misc_object__WEBPACK_IMPORTED_MODULE_0__[/* noop */ "e"];
+    var promise;
+    if (window.Promise) {
+        promise = new Promise(function (resolve, reject) {
+            resolveFn = resolve;
+            rejectFn = reject;
+        });
+    }
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if ((xhr.status >= 200 && xhr.status <= 299) || xhr.status === 0) {
+                var resp = xhr.responseText;
+                var contentType = xhr.getResponseHeader("Content-Type") || '';
+                if (contentType.toLowerCase().indexOf('json') > -1)
+                    resp = JSON.parse(resp);
+                if (data.success) {
+                    data.success(resp);
+                }
+                resolveFn(resp);
+            }
+            else {
+                if (data.error)
+                    data.error({ status: xhr.status, error: xhr.statusText });
+                rejectFn(xhr.statusText);
+            }
+            clearTimeout(abortTmr);
+            resolved = true;
+        }
+    };
+    xhr.open(data.method, data.url, true);
+    if (data.requestType) {
+        if (data.requestType !== 'multipart/form-data')
+            xhr.setRequestHeader("Content-Type", data.requestType);
+    }
+    else {
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    }
+    if (data.requestType === 'application/json')
+        data.data = data.data && JSON.stringify(data.data);
+    xhr.send(data.data);
+    if (data.timeout) {
+        abortTmr = setTimeout(function () {
+            if (resolved)
+                return;
+            xhr.abort();
+            if (data.ontimeout)
+                data.ontimeout();
+            rejectFn('timeout');
+        }, data.timeout);
+    }
+    return promise;
+};
+var httpClient;
+(function (httpClient) {
+    httpClient.get = function (url, data, success, error, setup) {
+        return request({
+            method: 'get',
+            url: url,
+            data: data,
+            success: success,
+            error: error,
+            setup: setup,
+        });
+    };
+    httpClient.post = function (url, data, success, error, setup) {
+        return request({
+            method: 'post',
+            url: url,
+            data: data,
+            requestType: 'application/json',
+            success: success,
+            error: error,
+            setup: setup,
+        });
+    };
+    httpClient.postMultiPart = function (url, file, data, success, error, setup) {
+        var formData = new FormData();
+        Object.keys(data).forEach(function (key) {
+            formData.append(key, data[key]);
+        });
+        formData.append('file', file);
+        formData.append('fileName', file.name);
+        return request({
+            method: 'post',
+            url: url,
+            data: formData,
+            requestType: 'multipart/form-data',
+            success: success,
+            error: error,
+            setup: setup,
+        });
+    };
+})(httpClient || (httpClient = {}));
+
+
+/***/ }),
+
 /***/ 13:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -789,132 +915,6 @@ var AbstractTexture = (function () {
     return AbstractTexture;
 }());
 
-
-
-/***/ }),
-
-/***/ 133:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return httpClient; });
-/* harmony import */ var _engine_misc_object__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(14);
-
-var objectToQuery = function (o) {
-    if (o === undefined || o === null)
-        return '';
-    if (o instanceof FormData)
-        return o;
-    var paramsArr = [];
-    if (typeof o === 'string' || typeof o === 'number')
-        return o.toString();
-    Object.keys(o).forEach(function (key) {
-        paramsArr.push([key, encodeURIComponent(o[key])]);
-    });
-    return paramsArr.map(function (item) { return [item[0] + '=' + item[1]]; }).join('&');
-};
-var request = function (data) {
-    var abortTmr;
-    var resolved = false;
-    data.method = data.method || 'get';
-    if (data.data && data.method === 'get')
-        data.url += '?' + objectToQuery(data.data);
-    var xhr = new XMLHttpRequest();
-    if (data.setup)
-        data.setup(xhr);
-    var resolveFn = _engine_misc_object__WEBPACK_IMPORTED_MODULE_0__[/* noop */ "e"], rejectFn = _engine_misc_object__WEBPACK_IMPORTED_MODULE_0__[/* noop */ "e"];
-    var promise;
-    if (window.Promise) {
-        promise = new Promise(function (resolve, reject) {
-            resolveFn = resolve;
-            rejectFn = reject;
-        });
-    }
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            if ((xhr.status >= 200 && xhr.status <= 299) || xhr.status === 0) {
-                var resp = xhr.responseText;
-                var contentType = xhr.getResponseHeader("Content-Type") || '';
-                if (contentType.toLowerCase().indexOf('json') > -1)
-                    resp = JSON.parse(resp);
-                if (data.success) {
-                    data.success(resp);
-                }
-                resolveFn(resp);
-            }
-            else {
-                if (data.error)
-                    data.error({ status: xhr.status, error: xhr.statusText });
-                rejectFn(xhr.statusText);
-            }
-            clearTimeout(abortTmr);
-            resolved = true;
-        }
-    };
-    xhr.open(data.method, data.url, true);
-    if (data.requestType) {
-        if (data.requestType !== 'multipart/form-data')
-            xhr.setRequestHeader("Content-Type", data.requestType);
-    }
-    else {
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    }
-    if (data.requestType === 'application/json')
-        data.data = data.data && JSON.stringify(data.data);
-    xhr.send(data.data);
-    if (data.timeout) {
-        abortTmr = setTimeout(function () {
-            if (resolved)
-                return;
-            xhr.abort();
-            if (data.ontimeout)
-                data.ontimeout();
-            rejectFn('timeout');
-        }, data.timeout);
-    }
-    return promise;
-};
-var httpClient;
-(function (httpClient) {
-    httpClient.get = function (url, data, success, error, setup) {
-        return request({
-            method: 'get',
-            url: url,
-            data: data,
-            success: success,
-            error: error,
-            setup: setup,
-        });
-    };
-    httpClient.post = function (url, data, success, error, setup) {
-        return request({
-            method: 'post',
-            url: url,
-            data: data,
-            requestType: 'application/json',
-            success: success,
-            error: error,
-            setup: setup,
-        });
-    };
-    httpClient.postMultiPart = function (url, file, data, success, error, setup) {
-        var formData = new FormData();
-        Object.keys(data).forEach(function (key) {
-            formData.append(key, data[key]);
-        });
-        formData.append('file', file);
-        formData.append('fileName', file.name);
-        return request({
-            method: 'post',
-            url: url,
-            data: formData,
-            requestType: 'multipart/form-data',
-            success: success,
-            error: error,
-            setup: setup,
-        });
-    };
-})(httpClient || (httpClient = {}));
 
 
 /***/ }),
@@ -3201,7 +3201,7 @@ var ShaderGenerator = (function () {
 /***/ 309:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(466);
+module.exports = __webpack_require__(326);
 
 
 /***/ }),
@@ -3271,6 +3271,285 @@ var KeyBoardEvent = (function (_super) {
     return KeyBoardEvent;
 }(_engine_control_abstract_abstractKeypad__WEBPACK_IMPORTED_MODULE_1__[/* KeyPadEvent */ "c"]));
 
+
+
+/***/ }),
+
+/***/ 326:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+// ESM COMPAT FLAG
+__webpack_require__.r(__webpack_exports__);
+
+// EXTERNAL MODULE: ./engine/control/keyboard/keyboardControl.ts
+var keyboardControl = __webpack_require__(63);
+
+// EXTERNAL MODULE: ./engine/core/game.ts
+var core_game = __webpack_require__(9);
+
+// EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
+var tslib_es6 = __webpack_require__(1);
+
+// EXTERNAL MODULE: ./engine/scene/scene.ts
+var scene = __webpack_require__(21);
+
+// EXTERNAL MODULE: ./engine/renderable/impl/general/drawingSurface.ts
+var drawingSurface = __webpack_require__(75);
+
+// CONCATENATED MODULE: ./demo/vTeacher/impl/history.ts
+var History = (function () {
+    function History() {
+        this.commands = [];
+    }
+    History.prototype.stepBack = function () {
+        this.commands.pop();
+    };
+    History.prototype.getCurrentCommands = function () {
+        return this.commands;
+    };
+    History.prototype.addCommand = function (command) {
+        this.commands.push(command);
+    };
+    History.prototype.addCommands = function (commands) {
+        var _a;
+        (_a = this.commands).push.apply(_a, commands);
+    };
+    History.prototype.clear = function () {
+        this.commands.length = 0;
+    };
+    return History;
+}());
+
+
+// EXTERNAL MODULE: ./engine/debug/httpClient.ts
+var httpClient = __webpack_require__(121);
+
+// CONCATENATED MODULE: ./demo/vTeacher/impl/comet.ts
+
+var comet_Comet = (function () {
+    function Comet(cb, repeat) {
+        this.cb = cb;
+        this.repeat = repeat;
+        this.lastUpdated = 0;
+        this.poll();
+    }
+    Comet.prototype.poll = function () {
+        var _this = this;
+        httpClient["a" /* httpClient */].post('getCommands', { lastUpdated: this.lastUpdated }, function (resp) {
+            var r = resp;
+            _this.lastUpdated = r.lastUpdated;
+            _this.cb(r);
+            if (_this.repeat) {
+                _this.tid = setTimeout(function () {
+                    _this.poll();
+                }, 1000);
+            }
+        }, function () {
+            if (_this.repeat) {
+                _this.tid = setTimeout(function () {
+                    _this.poll();
+                }, 1000);
+            }
+        }, function (xhr) {
+            _this.currentXhr = xhr;
+        });
+    };
+    return Comet;
+}());
+
+
+// EXTERNAL MODULE: ./engine/control/mouse/mouseEvents.ts
+var mouseEvents = __webpack_require__(6);
+
+// EXTERNAL MODULE: ./engine/control/keyboard/keyboardEvents.ts
+var keyboardEvents = __webpack_require__(32);
+
+// EXTERNAL MODULE: ./engine/control/keyboard/keyboardKeys.ts
+var keyboardKeys = __webpack_require__(74);
+
+// CONCATENATED MODULE: ./demo/vTeacher/impl/teacherStuff.ts
+
+
+
+
+
+var teacherStuff_TeacherStuff = (function () {
+    function TeacherStuff(game, board, surface, history) {
+        this.game = game;
+        this.board = board;
+        this.surface = surface;
+        this.history = history;
+        this.teacherCommands = [];
+        this.currentCommand = { points: [] };
+        this.listenMouse();
+        this.listenKeyboard();
+    }
+    TeacherStuff.prototype.listenMouse = function () {
+        var _this = this;
+        this.surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mouseMove, function (e) {
+            if (e.isMouseDown) {
+                _this.surface.lineTo(e.screenX, e.screenY);
+                _this.surface.moveTo(e.screenX, e.screenY);
+                _this.currentCommand.points.push(+e.screenX.toFixed(2), +e.screenY.toFixed(2));
+            }
+        });
+        this.surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mouseDown, function (e) {
+            _this.surface.moveTo(e.screenX, e.screenY);
+            _this.surface.lineTo(e.screenX, e.screenY);
+            _this.currentCommand.points.push(+e.screenX.toFixed(2), +e.screenY.toFixed(2));
+        });
+        this.surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mousePressed, function (e) { return Object(tslib_es6["b" /* __awaiter */])(_this, void 0, void 0, function () {
+            return Object(tslib_es6["d" /* __generator */])(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        this.surface.clear();
+                        this.currentCommand = { points: [], extra: 'clear' };
+                        this.teacherCommands.push(this.currentCommand);
+                        this.history.clear();
+                        return [4, httpClient["a" /* httpClient */].post('addCommands', this.teacherCommands)];
+                    case 1:
+                        _a.sent();
+                        this.teacherCommands = [];
+                        return [2];
+                }
+            });
+        }); });
+        this.surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mouseUp, function (e) { return Object(tslib_es6["b" /* __awaiter */])(_this, void 0, void 0, function () {
+            return Object(tslib_es6["d" /* __generator */])(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        this.teacherCommands.push(this.currentCommand);
+                        this.history.addCommand(this.currentCommand);
+                        this.currentCommand = { points: [] };
+                        return [4, httpClient["a" /* httpClient */].post('addCommands', this.teacherCommands)];
+                    case 1:
+                        _a.sent();
+                        this.teacherCommands = [];
+                        return [2];
+                }
+            });
+        }); });
+    };
+    TeacherStuff.prototype.listenKeyboard = function () {
+        var _this = this;
+        var kb = this.game.getControl('KeyboardControl');
+        this.game.getCurrScene().on(keyboardEvents["a" /* KEYBOARD_EVENTS */].keyPressed, function (e) { return Object(tslib_es6["b" /* __awaiter */])(_this, void 0, void 0, function () {
+            var historyCommands;
+            return Object(tslib_es6["d" /* __generator */])(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!(kb.isPressed(keyboardKeys["a" /* KEYBOARD_KEY */].Z) && kb.isPressed(keyboardKeys["a" /* KEYBOARD_KEY */].CONTROL))) return [3, 2];
+                        this.surface.clear();
+                        this.history.stepBack();
+                        historyCommands = this.history.getCurrentCommands();
+                        this.board.execCommands(historyCommands);
+                        this.teacherCommands.push({ points: [], extra: historyCommands.length ? 'undo' : 'clear' });
+                        return [4, httpClient["a" /* httpClient */].post('addCommands', this.teacherCommands)];
+                    case 1:
+                        _a.sent();
+                        this.teacherCommands = [];
+                        _a.label = 2;
+                    case 2: return [2];
+                }
+            });
+        }); });
+    };
+    return TeacherStuff;
+}());
+
+
+// CONCATENATED MODULE: ./demo/vTeacher/impl/board.ts
+
+
+
+var board_Board = (function () {
+    function Board(game, surface, isTeacher) {
+        var _this = this;
+        this.game = game;
+        this.surface = surface;
+        this.isTeacher = isTeacher;
+        this.history = new History();
+        this.comet = new comet_Comet(function (r) {
+            var commands = r.commands;
+            commands.forEach(function (command) {
+                if (command.extra === 'undo') {
+                    _this.surface.clear();
+                    _this.history.stepBack();
+                    _this.execCommands(_this.history.getCurrentCommands());
+                }
+                else {
+                    _this.history.addCommand(command);
+                    _this.execCommand(command);
+                }
+            });
+        }, !this.isTeacher);
+        surface.setDrawColor(120, 222, 200);
+        surface.setLineWidth(2);
+        if (isTeacher)
+            this.initTeacherStuff();
+    }
+    Board.prototype.execCommand = function (command) {
+        var _a;
+        if (command.extra === 'clear') {
+            this.surface.clear();
+            this.history.clear();
+        }
+        else {
+            if ((_a = command.points) === null || _a === void 0 ? void 0 : _a.length)
+                this.surface.drawPolyline(command.points);
+        }
+    };
+    Board.prototype.execCommands = function (commands) {
+        var _this = this;
+        commands === null || commands === void 0 ? void 0 : commands.forEach(function (c) { return _this.execCommand(c); });
+    };
+    ;
+    Board.prototype.initTeacherStuff = function () {
+        var teacherStuff = new teacherStuff_TeacherStuff(this.game, this, this.surface, this.history);
+    };
+    return Board;
+}());
+
+
+// CONCATENATED MODULE: ./demo/vTeacher/mainScene.ts
+
+
+
+
+var mainScene_isTeacher = location.href.indexOf('teacher') > 0;
+var mainScene_MainScene = (function (_super) {
+    Object(tslib_es6["c" /* __extends */])(MainScene, _super);
+    function MainScene() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    MainScene.prototype.onReady = function () {
+        var surface = new drawingSurface["a" /* DrawingSurface */](this.game, this.game.size);
+        this.appendChild(surface);
+        var board = new board_Board(this.game, surface, mainScene_isTeacher);
+    };
+    return MainScene;
+}(scene["b" /* Scene */]));
+
+
+// EXTERNAL MODULE: ./engine/renderer/webGl/webGlRenderer.ts + 8 modules
+var webGlRenderer = __webpack_require__(51);
+
+// EXTERNAL MODULE: ./engine/control/mouse/mouseControl.ts + 1 modules
+var mouseControl = __webpack_require__(61);
+
+// CONCATENATED MODULE: ./demo/vTeacher/index.ts
+
+
+
+
+
+var vTeacher_game = new core_game["a" /* Game */]({ width: 1024, height: 600, scaleStrategy: core_game["b" /* SCALE_STRATEGY */].FIT });
+vTeacher_game.setRenderer(webGlRenderer["a" /* WebGlRenderer */]);
+vTeacher_game.addControl(keyboardControl["a" /* KeyboardControl */]);
+vTeacher_game.addControl(mouseControl["a" /* MouseControl */]);
+var mainScene = new mainScene_MainScene(vTeacher_game);
+vTeacher_game.runScene(mainScene);
 
 
 /***/ }),
@@ -4611,7 +4890,7 @@ var Device = (function () {
             isTouch: Device.isTouch,
             isFrame: Device.isFrame,
             isIPhone: Device.isIPhone,
-            buildAt: 1596822754728,
+            buildAt: 1596972733198,
             embeddedEngine: Device.embeddedEngine,
         });
     };
@@ -4895,7 +5174,7 @@ var loadViaXmlHttp = function (urlRequest, onProgress) {
     if (!urlRequest.method)
         urlRequest.method = 'GET';
     var xhr = new XMLHttpRequest();
-    xhr.open(urlRequest.method, addUrlParameter(urlRequest.url, 'modified', 1596822754697), true);
+    xhr.open(urlRequest.method, addUrlParameter(urlRequest.url, 'modified', 1596972733278), true);
     xhr.responseType = urlRequest.responseType;
     if (xhr.responseType === 'blob') {
         xhr.setRequestHeader('Accept-Ranges', 'bytes');
@@ -5353,149 +5632,6 @@ var timerDelegate_TimerDelegate = (function () {
     return TimerDelegate;
 }());
 
-
-
-/***/ }),
-
-/***/ 466:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-// ESM COMPAT FLAG
-__webpack_require__.r(__webpack_exports__);
-
-// EXTERNAL MODULE: ./engine/control/keyboard/keyboardControl.ts
-var keyboardControl = __webpack_require__(63);
-
-// EXTERNAL MODULE: ./engine/core/game.ts
-var game = __webpack_require__(9);
-
-// EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-var tslib_es6 = __webpack_require__(1);
-
-// EXTERNAL MODULE: ./engine/scene/scene.ts
-var scene = __webpack_require__(21);
-
-// EXTERNAL MODULE: ./engine/renderable/impl/general/drawingSurface.ts
-var drawingSurface = __webpack_require__(75);
-
-// EXTERNAL MODULE: ./engine/control/mouse/mouseEvents.ts
-var mouseEvents = __webpack_require__(6);
-
-// EXTERNAL MODULE: ./engine/debug/httpClient.ts
-var httpClient = __webpack_require__(133);
-
-// CONCATENATED MODULE: ./demo/vTeacher/mainScene.ts
-
-
-
-
-
-var isTeacher = location.href.indexOf('teacher') > 0;
-var mainScene_Comet = (function () {
-    function Comet(cb, repeat) {
-        this.cb = cb;
-        this.repeat = repeat;
-        this.lastUpdated = 0;
-        this.poll();
-    }
-    Comet.prototype.poll = function () {
-        var _this = this;
-        httpClient["a" /* httpClient */].post('getCommands', { lastUpdated: this.lastUpdated }, function (resp) {
-            var r = resp;
-            _this.lastUpdated = r.lastUpdated;
-            _this.cb(r);
-            if (_this.repeat) {
-                _this.tid = setTimeout(function () {
-                    _this.poll();
-                }, 1000);
-            }
-        }, function () {
-            if (_this.repeat) {
-                _this.tid = setTimeout(function () {
-                    _this.poll();
-                }, 1000);
-            }
-        }, function (xhr) {
-            _this.currentXhr = xhr;
-        });
-    };
-    return Comet;
-}());
-var mainScene_MainScene = (function (_super) {
-    Object(tslib_es6["c" /* __extends */])(MainScene, _super);
-    function MainScene() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    MainScene.prototype.onReady = function () {
-        var surface = new drawingSurface["a" /* DrawingSurface */](this.game, this.game.size);
-        this.appendChild(surface);
-        surface.setDrawColor(120, 222, 200);
-        surface.setLineWidth(2);
-        var execCommands = function (r) {
-            var _a;
-            (_a = r === null || r === void 0 ? void 0 : r.commands) === null || _a === void 0 ? void 0 : _a.forEach(function (c) {
-                if (c.extra === 'clear')
-                    surface.clear();
-                else
-                    surface.drawPolyline(c.points);
-            });
-        };
-        var comet = new mainScene_Comet(function (r) { return execCommands(r); }, !isTeacher);
-        if (isTeacher) {
-            var teacherCommands_1 = [];
-            var currentCommand_1 = { points: [] };
-            surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mouseMove, function (e) {
-                if (e.isMouseDown) {
-                    surface.lineTo(e.screenX, e.screenY);
-                    surface.moveTo(e.screenX, e.screenY);
-                    currentCommand_1.points.push(+e.screenX.toFixed(2), +e.screenY.toFixed(2));
-                }
-            });
-            surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mouseDown, function (e) {
-                surface.moveTo(e.screenX, e.screenY);
-                surface.lineTo(e.screenX, e.screenY);
-                currentCommand_1.points.push(+e.screenX.toFixed(2), +e.screenY.toFixed(2));
-            });
-            surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mousePressed, function (e) {
-                surface.clear();
-                currentCommand_1 = { points: [], extra: 'clear' };
-                teacherCommands_1.push(currentCommand_1);
-                httpClient["a" /* httpClient */].post('addCommands', teacherCommands_1, function () {
-                    teacherCommands_1 = [];
-                });
-            });
-            surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mouseUp, function (e) {
-                teacherCommands_1.push(currentCommand_1);
-                currentCommand_1 = { points: [] };
-                httpClient["a" /* httpClient */].post('addCommands', teacherCommands_1, function () {
-                    teacherCommands_1 = [];
-                });
-            });
-        }
-    };
-    return MainScene;
-}(scene["b" /* Scene */]));
-
-
-// EXTERNAL MODULE: ./engine/renderer/webGl/webGlRenderer.ts + 8 modules
-var webGlRenderer = __webpack_require__(51);
-
-// EXTERNAL MODULE: ./engine/control/mouse/mouseControl.ts + 1 modules
-var mouseControl = __webpack_require__(60);
-
-// CONCATENATED MODULE: ./demo/vTeacher/index.ts
-
-
-
-
-
-var vTeacher_game = new game["a" /* Game */]({ width: 1024, height: 600, scaleStrategy: game["b" /* SCALE_STRATEGY */].FIT });
-vTeacher_game.setRenderer(webGlRenderer["a" /* WebGlRenderer */]);
-vTeacher_game.addControl(keyboardControl["a" /* KeyboardControl */]);
-vTeacher_game.addControl(mouseControl["a" /* MouseControl */]);
-var mainScene = new mainScene_MainScene(vTeacher_game);
-vTeacher_game.runScene(mainScene);
 
 
 /***/ }),
@@ -8345,318 +8481,6 @@ var MOUSE_EVENTS;
 "use strict";
 
 // EXPORTS
-__webpack_require__.d(__webpack_exports__, "a", function() { return /* binding */ mouseControl_MouseControl; });
-
-// EXTERNAL MODULE: ./engine/misc/mathEx.ts
-var mathEx = __webpack_require__(19);
-
-// EXTERNAL MODULE: ./engine/geometry/point2d.ts
-var point2d = __webpack_require__(4);
-
-// EXTERNAL MODULE: ./engine/geometry/rect.ts
-var rect = __webpack_require__(11);
-
-// EXTERNAL MODULE: ./engine/debug/debugError.ts
-var debugError = __webpack_require__(0);
-
-// EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-var tslib_es6 = __webpack_require__(1);
-
-// EXTERNAL MODULE: ./engine/misc/objectPool.ts
-var objectPool = __webpack_require__(12);
-
-// EXTERNAL MODULE: ./engine/misc/releaseableEntity.ts
-var releaseableEntity = __webpack_require__(24);
-
-// CONCATENATED MODULE: ./engine/control/mouse/mousePoint.ts
-
-
-
-
-var MOUSE_BUTTON;
-(function (MOUSE_BUTTON) {
-    MOUSE_BUTTON[MOUSE_BUTTON["LEFT"] = 0] = "LEFT";
-    MOUSE_BUTTON[MOUSE_BUTTON["RIGHT"] = 1] = "RIGHT";
-    MOUSE_BUTTON[MOUSE_BUTTON["SCROLL"] = 2] = "SCROLL";
-})(MOUSE_BUTTON || (MOUSE_BUTTON = {}));
-var mousePoint_MousePoint = (function (_super) {
-    Object(tslib_es6["c" /* __extends */])(MousePoint, _super);
-    function MousePoint() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.screenCoordinate = new point2d["a" /* Point2d */]();
-        _this.sceneCoordinate = new point2d["a" /* Point2d */]();
-        return _this;
-    }
-    MousePoint.fromPool = function () {
-        return MousePoint.mousePointsPool.getFreeObject();
-    };
-    MousePoint.mousePointsPool = new objectPool["a" /* ObjectPool */](MousePoint);
-    return MousePoint;
-}(releaseableEntity["a" /* ReleaseableEntity */]));
-
-
-// EXTERNAL MODULE: ./engine/control/mouse/mouseEvents.ts
-var mouseEvents = __webpack_require__(6);
-
-// EXTERNAL MODULE: ./engine/geometry/mat4.ts
-var mat4 = __webpack_require__(2);
-
-// EXTERNAL MODULE: ./engine/geometry/vec4.ts
-var vec4 = __webpack_require__(47);
-
-// CONCATENATED MODULE: ./engine/control/mouse/mouseControl.ts
-
-
-
-
-
-
-
-
-var Vec4Holder = vec4["a" /* vec4 */].Vec4Holder;
-var pointTopLeft = new Vec4Holder();
-pointTopLeft.set(0, 0, 0, 1);
-var LEFT_MOUSE_BTN = 0;
-var mouseControl_MouseControl = (function () {
-    function MouseControl(_game) {
-        this._game = _game;
-        this.type = 'MouseControl';
-        this._objectsCaptured = {};
-        this._objectsHovered = {};
-        this._objectsFirstHovered = {};
-    }
-    MouseControl.triggerGameObjectEvent = function (e, eventName, mousePoint, go) {
-        var goRect = rect["a" /* Rect */].fromPool();
-        var pointBottomRight = Vec4Holder.fromPool();
-        pointBottomRight.set(go.size.width, go.size.height, 0, 1);
-        var pointTopLeftTransformation = Vec4Holder.fromPool();
-        var pointBottomRightTransformation = Vec4Holder.fromPool();
-        mat4["a" /* mat4 */].multVecByMatrix(pointTopLeftTransformation, go.worldTransformMatrix, pointTopLeft);
-        mat4["a" /* mat4 */].multVecByMatrix(pointBottomRightTransformation, go.worldTransformMatrix, pointBottomRight);
-        goRect.setXYWH(pointTopLeftTransformation.x, pointTopLeftTransformation.y, pointBottomRightTransformation.x - pointTopLeftTransformation.x, pointBottomRightTransformation.y - pointTopLeftTransformation.y);
-        if (goRect.width < 0) {
-            goRect.width = -goRect.width;
-            goRect.x -= goRect.width;
-        }
-        if (goRect.height < 0) {
-            goRect.height = -goRect.height;
-            goRect.y -= goRect.height;
-        }
-        pointBottomRight.release();
-        pointTopLeftTransformation.release();
-        pointBottomRightTransformation.release();
-        var screenPoint = point2d["a" /* Point2d */].fromPool();
-        screenPoint.setXY(mousePoint.screenCoordinate.x, mousePoint.screenCoordinate.y);
-        var res = false;
-        if (mathEx["a" /* MathEx */].isPointInRect(screenPoint, goRect)) {
-            if (!go.passMouseEventsThrough) {
-                mousePoint.target = go;
-                var mouseEvent = {
-                    screenX: mousePoint.screenCoordinate.x,
-                    screenY: mousePoint.screenCoordinate.y,
-                    sceneX: mousePoint.sceneCoordinate.x,
-                    sceneY: mousePoint.sceneCoordinate.y,
-                    objectX: mousePoint.sceneCoordinate.x - go.pos.x,
-                    objectY: mousePoint.sceneCoordinate.y - go.pos.y,
-                    id: mousePoint.id,
-                    target: go,
-                    nativeEvent: e,
-                    eventName: eventName,
-                    isMouseDown: mousePoint.isMouseDown,
-                    button: e.button,
-                };
-                go.trigger(eventName, mouseEvent);
-            }
-            res = !go.passMouseEventsThrough;
-        }
-        goRect.release();
-        screenPoint.release();
-        for (var _i = 0, _a = go.children; _i < _a.length; _i++) {
-            var ch = _a[_i];
-            var childRes = MouseControl.triggerGameObjectEvent(e, eventName, mousePoint, ch);
-            res = res || childRes;
-        }
-        return res;
-    };
-    MouseControl.prototype.listenTo = function () {
-        var _this = this;
-        if ( true && !this._game.getRenderer()) {
-            throw new debugError["a" /* DebugError */]("can not initialize mouse control: renderer is not set");
-        }
-        var container = this._game.getRenderer().container;
-        this._container = container;
-        container.ontouchstart = function (e) {
-            e.preventDefault();
-            var l = e.touches.length;
-            while (l--) {
-                _this.resolveClick(e.touches[l]);
-            }
-        };
-        container.onmousedown = function (e) {
-            if (e.button === LEFT_MOUSE_BTN)
-                _this.resolveClick(e);
-            else {
-                _this.resolveButtonPressed(e);
-            }
-        };
-        container.ontouchend = container.ontouchcancel = function (e) {
-            e.preventDefault();
-            var l = e.changedTouches.length;
-            while (l--) {
-                _this.resolveMouseUp(e.changedTouches[l]);
-            }
-        };
-        container.onmouseup = function (e) {
-            _this.resolveMouseUp(e);
-        };
-        container.ontouchmove = function (e) {
-            e.preventDefault();
-            var l = e.touches.length;
-            while (l--) {
-                _this.resolveMouseMove(e.touches[l], true);
-            }
-        };
-        container.onmousemove = function (e) {
-            var isMouseDown = e.buttons === 1;
-            _this.resolveMouseMove(e, isMouseDown);
-        };
-        container.ondblclick = function (e) {
-            _this.resolveDoubleClick(e);
-        };
-        container.onmousewheel = function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            _this.resolveScroll(e);
-        };
-    };
-    MouseControl.prototype.update = function () { };
-    MouseControl.prototype.destroy = function () {
-        var _this = this;
-        if (!this._container)
-            return;
-        [
-            'mouseMove', 'ontouchstart', 'onmousedown',
-            'ontouchend', 'onmouseup', 'ontouchmove',
-            'onmousemove', 'ondblclick'
-        ].forEach(function (evtName) {
-            _this._container[evtName] = null;
-        });
-    };
-    MouseControl.prototype.resolveSceneCoordinates = function (mousePoint, layer) {
-        var worldPoint = this._game.camera.screenToWorld(mousePoint.screenCoordinate, layer.transformType);
-        mousePoint.sceneCoordinate.set(worldPoint);
-        worldPoint.release();
-    };
-    MouseControl.prototype.resolvePoint = function (e) {
-        var game = this._game;
-        var clientX = e.clientX;
-        var clientY = e.clientY;
-        var screenX = (clientX - game.pos.x) / game.scale.x;
-        var screenY = (clientY - game.pos.y) / game.scale.y;
-        var screenPoint = point2d["a" /* Point2d */].fromPool();
-        screenPoint.setXY(screenX, screenY);
-        var mousePoint = mousePoint_MousePoint.fromPool();
-        mousePoint.screenCoordinate.set(screenPoint);
-        mousePoint.id = e.identifier || e.pointerId || 0;
-        screenPoint.release();
-        return mousePoint;
-    };
-    MouseControl.prototype.triggerEvent = function (e, mouseEvent, isMouseDown) {
-        if (isMouseDown === void 0) { isMouseDown = false; }
-        var scene = this._game.getCurrScene();
-        var mousePoint = this.resolvePoint(e);
-        mousePoint.isMouseDown = isMouseDown;
-        var isCaptured = false;
-        var i = scene.getLayers().length;
-        while (i--) {
-            var layer = scene.getLayers()[i];
-            this.resolveSceneCoordinates(mousePoint, layer);
-            var j = layer.children.length;
-            while (j--) {
-                var go = layer.children[j];
-                isCaptured = MouseControl.triggerGameObjectEvent(e, mouseEvent, mousePoint, go);
-                if (isCaptured) {
-                    mousePoint.target = go;
-                    break;
-                }
-            }
-            if (isCaptured)
-                break;
-        }
-        if (mousePoint.target === undefined)
-            mousePoint.target = scene;
-        scene.trigger(mouseEvent, {
-            screenX: mousePoint.screenCoordinate.x,
-            screenY: mousePoint.screenCoordinate.y,
-            sceneX: mousePoint.sceneCoordinate.x,
-            sceneY: mousePoint.sceneCoordinate.y,
-            id: mousePoint.id,
-            eventName: mouseEvent,
-            nativeEvent: e,
-            button: e.button,
-            isMouseDown: isMouseDown
-        });
-        return mousePoint;
-    };
-    MouseControl.prototype.resolveClick = function (e) {
-        var point = this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].click);
-        this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].mouseDown).release();
-        this._objectsCaptured[point.id] = point.target;
-        point.release();
-    };
-    MouseControl.prototype.resolveButtonPressed = function (e) {
-        var point = this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].click);
-        this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].mousePressed).release();
-        this._objectsCaptured[point.id] = point.target;
-        point.release();
-    };
-    MouseControl.prototype.resolveMouseMove = function (e, isMouseDown) {
-        var point = this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].mouseMove, isMouseDown);
-        var lastHoveredObject = this._objectsHovered[point.id];
-        if (lastHoveredObject !== undefined) {
-            if (lastHoveredObject !== point.target) {
-                lastHoveredObject.trigger(mouseEvents["a" /* MOUSE_EVENTS */].mouseLeave, point);
-                delete this._objectsFirstHovered[point.id];
-            }
-            else {
-                if (this._objectsFirstHovered[point.id] === undefined) {
-                    lastHoveredObject.trigger(mouseEvents["a" /* MOUSE_EVENTS */].mouseEnter, point);
-                    this._objectsFirstHovered[point.id] = point.target;
-                }
-            }
-        }
-        this._objectsHovered[point.id] = point.target;
-        point.release();
-    };
-    MouseControl.prototype.resolveMouseUp = function (e) {
-        var point = this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].mouseUp);
-        var lastCapturedObject = this._objectsCaptured[point.id];
-        if (lastCapturedObject !== undefined && point.target !== lastCapturedObject) {
-            lastCapturedObject.trigger(mouseEvents["a" /* MOUSE_EVENTS */].mouseUp, point);
-        }
-        delete this._objectsCaptured[point.id];
-        delete this._objectsHovered[point.id];
-        point.release();
-    };
-    MouseControl.prototype.resolveDoubleClick = function (e) {
-        this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].doubleClick).release();
-    };
-    MouseControl.prototype.resolveScroll = function (e) {
-        this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].scroll).release();
-    };
-    return MouseControl;
-}());
-
-
-
-/***/ }),
-
-/***/ 61:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-
-// EXPORTS
 __webpack_require__.d(__webpack_exports__, "a", function() { return /* binding */ polyLine_PolyLine; });
 
 // EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
@@ -9257,6 +9081,318 @@ var polyLine_PolyLine = (function (_super) {
     };
     return PolyLine;
 }(shape["a" /* Shape */]));
+
+
+
+/***/ }),
+
+/***/ 61:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, "a", function() { return /* binding */ mouseControl_MouseControl; });
+
+// EXTERNAL MODULE: ./engine/misc/mathEx.ts
+var mathEx = __webpack_require__(19);
+
+// EXTERNAL MODULE: ./engine/geometry/point2d.ts
+var point2d = __webpack_require__(4);
+
+// EXTERNAL MODULE: ./engine/geometry/rect.ts
+var rect = __webpack_require__(11);
+
+// EXTERNAL MODULE: ./engine/debug/debugError.ts
+var debugError = __webpack_require__(0);
+
+// EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
+var tslib_es6 = __webpack_require__(1);
+
+// EXTERNAL MODULE: ./engine/misc/objectPool.ts
+var objectPool = __webpack_require__(12);
+
+// EXTERNAL MODULE: ./engine/misc/releaseableEntity.ts
+var releaseableEntity = __webpack_require__(24);
+
+// CONCATENATED MODULE: ./engine/control/mouse/mousePoint.ts
+
+
+
+
+var MOUSE_BUTTON;
+(function (MOUSE_BUTTON) {
+    MOUSE_BUTTON[MOUSE_BUTTON["LEFT"] = 0] = "LEFT";
+    MOUSE_BUTTON[MOUSE_BUTTON["RIGHT"] = 1] = "RIGHT";
+    MOUSE_BUTTON[MOUSE_BUTTON["SCROLL"] = 2] = "SCROLL";
+})(MOUSE_BUTTON || (MOUSE_BUTTON = {}));
+var mousePoint_MousePoint = (function (_super) {
+    Object(tslib_es6["c" /* __extends */])(MousePoint, _super);
+    function MousePoint() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.screenCoordinate = new point2d["a" /* Point2d */]();
+        _this.sceneCoordinate = new point2d["a" /* Point2d */]();
+        return _this;
+    }
+    MousePoint.fromPool = function () {
+        return MousePoint.mousePointsPool.getFreeObject();
+    };
+    MousePoint.mousePointsPool = new objectPool["a" /* ObjectPool */](MousePoint);
+    return MousePoint;
+}(releaseableEntity["a" /* ReleaseableEntity */]));
+
+
+// EXTERNAL MODULE: ./engine/control/mouse/mouseEvents.ts
+var mouseEvents = __webpack_require__(6);
+
+// EXTERNAL MODULE: ./engine/geometry/mat4.ts
+var mat4 = __webpack_require__(2);
+
+// EXTERNAL MODULE: ./engine/geometry/vec4.ts
+var vec4 = __webpack_require__(47);
+
+// CONCATENATED MODULE: ./engine/control/mouse/mouseControl.ts
+
+
+
+
+
+
+
+
+var Vec4Holder = vec4["a" /* vec4 */].Vec4Holder;
+var pointTopLeft = new Vec4Holder();
+pointTopLeft.set(0, 0, 0, 1);
+var LEFT_MOUSE_BTN = 0;
+var mouseControl_MouseControl = (function () {
+    function MouseControl(_game) {
+        this._game = _game;
+        this.type = 'MouseControl';
+        this._objectsCaptured = {};
+        this._objectsHovered = {};
+        this._objectsFirstHovered = {};
+    }
+    MouseControl.triggerGameObjectEvent = function (e, eventName, mousePoint, go) {
+        var goRect = rect["a" /* Rect */].fromPool();
+        var pointBottomRight = Vec4Holder.fromPool();
+        pointBottomRight.set(go.size.width, go.size.height, 0, 1);
+        var pointTopLeftTransformation = Vec4Holder.fromPool();
+        var pointBottomRightTransformation = Vec4Holder.fromPool();
+        mat4["a" /* mat4 */].multVecByMatrix(pointTopLeftTransformation, go.worldTransformMatrix, pointTopLeft);
+        mat4["a" /* mat4 */].multVecByMatrix(pointBottomRightTransformation, go.worldTransformMatrix, pointBottomRight);
+        goRect.setXYWH(pointTopLeftTransformation.x, pointTopLeftTransformation.y, pointBottomRightTransformation.x - pointTopLeftTransformation.x, pointBottomRightTransformation.y - pointTopLeftTransformation.y);
+        if (goRect.width < 0) {
+            goRect.width = -goRect.width;
+            goRect.x -= goRect.width;
+        }
+        if (goRect.height < 0) {
+            goRect.height = -goRect.height;
+            goRect.y -= goRect.height;
+        }
+        pointBottomRight.release();
+        pointTopLeftTransformation.release();
+        pointBottomRightTransformation.release();
+        var screenPoint = point2d["a" /* Point2d */].fromPool();
+        screenPoint.setXY(mousePoint.screenCoordinate.x, mousePoint.screenCoordinate.y);
+        var res = false;
+        if (mathEx["a" /* MathEx */].isPointInRect(screenPoint, goRect)) {
+            if (!go.passMouseEventsThrough) {
+                mousePoint.target = go;
+                var mouseEvent = {
+                    screenX: mousePoint.screenCoordinate.x,
+                    screenY: mousePoint.screenCoordinate.y,
+                    sceneX: mousePoint.sceneCoordinate.x,
+                    sceneY: mousePoint.sceneCoordinate.y,
+                    objectX: mousePoint.sceneCoordinate.x - go.pos.x,
+                    objectY: mousePoint.sceneCoordinate.y - go.pos.y,
+                    id: mousePoint.id,
+                    target: go,
+                    nativeEvent: e,
+                    eventName: eventName,
+                    isMouseDown: mousePoint.isMouseDown,
+                    button: e.button,
+                };
+                go.trigger(eventName, mouseEvent);
+            }
+            res = !go.passMouseEventsThrough;
+        }
+        goRect.release();
+        screenPoint.release();
+        for (var _i = 0, _a = go.children; _i < _a.length; _i++) {
+            var ch = _a[_i];
+            var childRes = MouseControl.triggerGameObjectEvent(e, eventName, mousePoint, ch);
+            res = res || childRes;
+        }
+        return res;
+    };
+    MouseControl.prototype.listenTo = function () {
+        var _this = this;
+        if ( true && !this._game.getRenderer()) {
+            throw new debugError["a" /* DebugError */]("can not initialize mouse control: renderer is not set");
+        }
+        var container = this._game.getRenderer().container;
+        this._container = container;
+        container.ontouchstart = function (e) {
+            e.preventDefault();
+            var l = e.touches.length;
+            while (l--) {
+                _this.resolveClick(e.touches[l]);
+            }
+        };
+        container.onmousedown = function (e) {
+            if (e.button === LEFT_MOUSE_BTN)
+                _this.resolveClick(e);
+            else {
+                _this.resolveButtonPressed(e);
+            }
+        };
+        container.ontouchend = container.ontouchcancel = function (e) {
+            e.preventDefault();
+            var l = e.changedTouches.length;
+            while (l--) {
+                _this.resolveMouseUp(e.changedTouches[l]);
+            }
+        };
+        container.onmouseup = function (e) {
+            _this.resolveMouseUp(e);
+        };
+        container.ontouchmove = function (e) {
+            e.preventDefault();
+            var l = e.touches.length;
+            while (l--) {
+                _this.resolveMouseMove(e.touches[l], true);
+            }
+        };
+        container.onmousemove = function (e) {
+            var isMouseDown = e.buttons === 1;
+            _this.resolveMouseMove(e, isMouseDown);
+        };
+        container.ondblclick = function (e) {
+            _this.resolveDoubleClick(e);
+        };
+        container.onmousewheel = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            _this.resolveScroll(e);
+        };
+    };
+    MouseControl.prototype.update = function () { };
+    MouseControl.prototype.destroy = function () {
+        var _this = this;
+        if (!this._container)
+            return;
+        [
+            'mouseMove', 'ontouchstart', 'onmousedown',
+            'ontouchend', 'onmouseup', 'ontouchmove',
+            'onmousemove', 'ondblclick'
+        ].forEach(function (evtName) {
+            _this._container[evtName] = null;
+        });
+    };
+    MouseControl.prototype.resolveSceneCoordinates = function (mousePoint, layer) {
+        var worldPoint = this._game.camera.screenToWorld(mousePoint.screenCoordinate, layer.transformType);
+        mousePoint.sceneCoordinate.set(worldPoint);
+        worldPoint.release();
+    };
+    MouseControl.prototype.resolvePoint = function (e) {
+        var game = this._game;
+        var clientX = e.clientX;
+        var clientY = e.clientY;
+        var screenX = (clientX - game.pos.x) / game.scale.x;
+        var screenY = (clientY - game.pos.y) / game.scale.y;
+        var screenPoint = point2d["a" /* Point2d */].fromPool();
+        screenPoint.setXY(screenX, screenY);
+        var mousePoint = mousePoint_MousePoint.fromPool();
+        mousePoint.screenCoordinate.set(screenPoint);
+        mousePoint.id = e.identifier || e.pointerId || 0;
+        screenPoint.release();
+        return mousePoint;
+    };
+    MouseControl.prototype.triggerEvent = function (e, mouseEvent, isMouseDown) {
+        if (isMouseDown === void 0) { isMouseDown = false; }
+        var scene = this._game.getCurrScene();
+        var mousePoint = this.resolvePoint(e);
+        mousePoint.isMouseDown = isMouseDown;
+        var isCaptured = false;
+        var i = scene.getLayers().length;
+        while (i--) {
+            var layer = scene.getLayers()[i];
+            this.resolveSceneCoordinates(mousePoint, layer);
+            var j = layer.children.length;
+            while (j--) {
+                var go = layer.children[j];
+                isCaptured = MouseControl.triggerGameObjectEvent(e, mouseEvent, mousePoint, go);
+                if (isCaptured) {
+                    mousePoint.target = go;
+                    break;
+                }
+            }
+            if (isCaptured)
+                break;
+        }
+        if (mousePoint.target === undefined)
+            mousePoint.target = scene;
+        scene.trigger(mouseEvent, {
+            screenX: mousePoint.screenCoordinate.x,
+            screenY: mousePoint.screenCoordinate.y,
+            sceneX: mousePoint.sceneCoordinate.x,
+            sceneY: mousePoint.sceneCoordinate.y,
+            id: mousePoint.id,
+            eventName: mouseEvent,
+            nativeEvent: e,
+            button: e.button,
+            isMouseDown: isMouseDown
+        });
+        return mousePoint;
+    };
+    MouseControl.prototype.resolveClick = function (e) {
+        var point = this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].click);
+        this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].mouseDown).release();
+        this._objectsCaptured[point.id] = point.target;
+        point.release();
+    };
+    MouseControl.prototype.resolveButtonPressed = function (e) {
+        var point = this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].click);
+        this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].mousePressed).release();
+        this._objectsCaptured[point.id] = point.target;
+        point.release();
+    };
+    MouseControl.prototype.resolveMouseMove = function (e, isMouseDown) {
+        var point = this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].mouseMove, isMouseDown);
+        var lastHoveredObject = this._objectsHovered[point.id];
+        if (lastHoveredObject !== undefined) {
+            if (lastHoveredObject !== point.target) {
+                lastHoveredObject.trigger(mouseEvents["a" /* MOUSE_EVENTS */].mouseLeave, point);
+                delete this._objectsFirstHovered[point.id];
+            }
+            else {
+                if (this._objectsFirstHovered[point.id] === undefined) {
+                    lastHoveredObject.trigger(mouseEvents["a" /* MOUSE_EVENTS */].mouseEnter, point);
+                    this._objectsFirstHovered[point.id] = point.target;
+                }
+            }
+        }
+        this._objectsHovered[point.id] = point.target;
+        point.release();
+    };
+    MouseControl.prototype.resolveMouseUp = function (e) {
+        var point = this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].mouseUp);
+        var lastCapturedObject = this._objectsCaptured[point.id];
+        if (lastCapturedObject !== undefined && point.target !== lastCapturedObject) {
+            lastCapturedObject.trigger(mouseEvents["a" /* MOUSE_EVENTS */].mouseUp, point);
+        }
+        delete this._objectsCaptured[point.id];
+        delete this._objectsHovered[point.id];
+        point.release();
+    };
+    MouseControl.prototype.resolveDoubleClick = function (e) {
+        this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].doubleClick).release();
+    };
+    MouseControl.prototype.resolveScroll = function (e) {
+        this.triggerEvent(e, mouseEvents["a" /* MOUSE_EVENTS */].scroll).release();
+    };
+    return MouseControl;
+}());
 
 
 
@@ -9950,7 +10086,7 @@ var earClippingTriangulator_EarClippingTriangulator = (function () {
 
 
 // EXTERNAL MODULE: ./engine/renderable/impl/geometry/polyLine.ts + 1 modules
-var polyLine = __webpack_require__(61);
+var polyLine = __webpack_require__(60);
 
 // EXTERNAL MODULE: ./engine/renderable/impl/geometry/helpers/calcNormal.ts
 var calcNormal = __webpack_require__(73);
@@ -10259,6 +10395,69 @@ var calcNormal = function (p1, p2, p3) {
 
 /***/ }),
 
+/***/ 74:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return KEYBOARD_KEY; });
+var KEYBOARD_KEY;
+(function (KEYBOARD_KEY) {
+    KEYBOARD_KEY[KEYBOARD_KEY["ENTER"] = 13] = "ENTER";
+    KEYBOARD_KEY[KEYBOARD_KEY["DIGIT_0"] = 48] = "DIGIT_0";
+    KEYBOARD_KEY[KEYBOARD_KEY["DIGIT_1"] = 49] = "DIGIT_1";
+    KEYBOARD_KEY[KEYBOARD_KEY["DIGIT_2"] = 50] = "DIGIT_2";
+    KEYBOARD_KEY[KEYBOARD_KEY["DIGIT_3"] = 51] = "DIGIT_3";
+    KEYBOARD_KEY[KEYBOARD_KEY["DIGIT_4"] = 52] = "DIGIT_4";
+    KEYBOARD_KEY[KEYBOARD_KEY["DIGIT_5"] = 53] = "DIGIT_5";
+    KEYBOARD_KEY[KEYBOARD_KEY["DIGIT_6"] = 54] = "DIGIT_6";
+    KEYBOARD_KEY[KEYBOARD_KEY["DIGIT_7"] = 55] = "DIGIT_7";
+    KEYBOARD_KEY[KEYBOARD_KEY["DIGIT_8"] = 56] = "DIGIT_8";
+    KEYBOARD_KEY[KEYBOARD_KEY["DIGIT_9"] = 57] = "DIGIT_9";
+    KEYBOARD_KEY[KEYBOARD_KEY["SPACE"] = 32] = "SPACE";
+    KEYBOARD_KEY[KEYBOARD_KEY["A"] = 65] = "A";
+    KEYBOARD_KEY[KEYBOARD_KEY["B"] = 66] = "B";
+    KEYBOARD_KEY[KEYBOARD_KEY["C"] = 67] = "C";
+    KEYBOARD_KEY[KEYBOARD_KEY["D"] = 68] = "D";
+    KEYBOARD_KEY[KEYBOARD_KEY["E"] = 69] = "E";
+    KEYBOARD_KEY[KEYBOARD_KEY["F"] = 70] = "F";
+    KEYBOARD_KEY[KEYBOARD_KEY["G"] = 71] = "G";
+    KEYBOARD_KEY[KEYBOARD_KEY["H"] = 72] = "H";
+    KEYBOARD_KEY[KEYBOARD_KEY["I"] = 73] = "I";
+    KEYBOARD_KEY[KEYBOARD_KEY["J"] = 74] = "J";
+    KEYBOARD_KEY[KEYBOARD_KEY["K"] = 75] = "K";
+    KEYBOARD_KEY[KEYBOARD_KEY["L"] = 76] = "L";
+    KEYBOARD_KEY[KEYBOARD_KEY["M"] = 77] = "M";
+    KEYBOARD_KEY[KEYBOARD_KEY["N"] = 78] = "N";
+    KEYBOARD_KEY[KEYBOARD_KEY["O"] = 79] = "O";
+    KEYBOARD_KEY[KEYBOARD_KEY["P"] = 80] = "P";
+    KEYBOARD_KEY[KEYBOARD_KEY["Q"] = 81] = "Q";
+    KEYBOARD_KEY[KEYBOARD_KEY["R"] = 82] = "R";
+    KEYBOARD_KEY[KEYBOARD_KEY["S"] = 83] = "S";
+    KEYBOARD_KEY[KEYBOARD_KEY["T"] = 84] = "T";
+    KEYBOARD_KEY[KEYBOARD_KEY["U"] = 85] = "U";
+    KEYBOARD_KEY[KEYBOARD_KEY["V"] = 86] = "V";
+    KEYBOARD_KEY[KEYBOARD_KEY["W"] = 87] = "W";
+    KEYBOARD_KEY[KEYBOARD_KEY["X"] = 88] = "X";
+    KEYBOARD_KEY[KEYBOARD_KEY["Y"] = 89] = "Y";
+    KEYBOARD_KEY[KEYBOARD_KEY["Z"] = 90] = "Z";
+    KEYBOARD_KEY[KEYBOARD_KEY["LEFT"] = 37] = "LEFT";
+    KEYBOARD_KEY[KEYBOARD_KEY["UP"] = 38] = "UP";
+    KEYBOARD_KEY[KEYBOARD_KEY["RIGHT"] = 39] = "RIGHT";
+    KEYBOARD_KEY[KEYBOARD_KEY["DOWN"] = 40] = "DOWN";
+    KEYBOARD_KEY[KEYBOARD_KEY["ALT"] = 18] = "ALT";
+    KEYBOARD_KEY[KEYBOARD_KEY["BACKSPACE"] = 8] = "BACKSPACE";
+    KEYBOARD_KEY[KEYBOARD_KEY["CAPS_LOCK"] = 20] = "CAPS_LOCK";
+    KEYBOARD_KEY[KEYBOARD_KEY["ESC"] = 27] = "ESC";
+    KEYBOARD_KEY[KEYBOARD_KEY["CONTROL"] = 17] = "CONTROL";
+    KEYBOARD_KEY[KEYBOARD_KEY["DELETE"] = 46] = "DELETE";
+    KEYBOARD_KEY[KEYBOARD_KEY["HOME"] = 36] = "HOME";
+    KEYBOARD_KEY[KEYBOARD_KEY["END"] = 35] = "END";
+    KEYBOARD_KEY[KEYBOARD_KEY["TAB"] = 9] = "TAB";
+})(KEYBOARD_KEY || (KEYBOARD_KEY = {}));
+
+
+/***/ }),
+
 /***/ 75:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -10273,7 +10472,7 @@ var calcNormal = function (p1, p2, p3) {
 /* harmony import */ var _engine_renderable_impl_geometry_line__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(65);
 /* harmony import */ var _engine_renderable_impl_geometry_ellipse__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(71);
 /* harmony import */ var _engine_renderable_impl_geometry_polygon__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(70);
-/* harmony import */ var _engine_renderable_impl_geometry_polyLine__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(61);
+/* harmony import */ var _engine_renderable_impl_geometry_polyLine__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(60);
 /* harmony import */ var _engine_renderer_webGl_base_matrixStack__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(33);
 /* harmony import */ var _engine_renderable_impl_general_nullGameObject__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(69);
 /* harmony import */ var _engine_renderable_impl_geometry_helpers_splineFromPoints__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(66);
@@ -11357,7 +11556,7 @@ if (true) {
 }
 if (true) {
     var now = Date.now();
-    var passed = now - 1596822751995;
+    var passed = now - 1596972731210;
     console.log("last compiled " + passed / 1000 + " sec ago");
 }
 var MainLoop = (function () {
