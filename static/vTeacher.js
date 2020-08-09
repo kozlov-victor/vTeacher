@@ -3387,6 +3387,11 @@ var teacherStuff_TeacherStuff = (function () {
     }
     TeacherStuff.prototype.listenMouse = function () {
         var _this = this;
+        this.surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mouseDown, function (e) {
+            _this.surface.moveTo(e.screenX, e.screenY);
+            _this.surface.lineTo(e.screenX, e.screenY);
+            _this.currentCommand.points.push(+e.screenX.toFixed(2), +e.screenY.toFixed(2));
+        });
         this.surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mouseMove, function (e) {
             if (e.isMouseDown) {
                 _this.surface.lineTo(e.screenX, e.screenY);
@@ -3394,34 +3399,32 @@ var teacherStuff_TeacherStuff = (function () {
                 _this.currentCommand.points.push(+e.screenX.toFixed(2), +e.screenY.toFixed(2));
             }
         });
-        this.surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mouseDown, function (e) {
-            _this.surface.moveTo(e.screenX, e.screenY);
-            _this.surface.lineTo(e.screenX, e.screenY);
-            _this.currentCommand.points.push(+e.screenX.toFixed(2), +e.screenY.toFixed(2));
-        });
-        this.surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mousePressed, function (e) { return Object(tslib_es6["b" /* __awaiter */])(_this, void 0, void 0, function () {
-            return Object(tslib_es6["d" /* __generator */])(this, function (_a) {
-                switch (_a.label) {
+        this.surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mouseUp, function (e) { return Object(tslib_es6["b" /* __awaiter */])(_this, void 0, void 0, function () {
+            var _a;
+            return Object(tslib_es6["d" /* __generator */])(this, function (_b) {
+                switch (_b.label) {
                     case 0:
-                        this.surface.clear();
-                        this.currentCommand = { points: [], extra: 'clear' };
+                        if (((_a = this.currentCommand.points) === null || _a === void 0 ? void 0 : _a.length) === 0 && this.currentCommand.extra === undefined)
+                            return [2];
                         this.teacherCommands.push(this.currentCommand);
-                        this.history.clear();
+                        this.history.addCommand(this.currentCommand);
+                        this.currentCommand = { points: [] };
                         return [4, httpClient["a" /* httpClient */].post('addCommands', this.teacherCommands)];
                     case 1:
-                        _a.sent();
+                        _b.sent();
                         this.teacherCommands = [];
                         return [2];
                 }
             });
         }); });
-        this.surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mouseUp, function (e) { return Object(tslib_es6["b" /* __awaiter */])(_this, void 0, void 0, function () {
+        this.surface.on(mouseEvents["a" /* MOUSE_EVENTS */].mousePressed, function (e) { return Object(tslib_es6["b" /* __awaiter */])(_this, void 0, void 0, function () {
             return Object(tslib_es6["d" /* __generator */])(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        this.teacherCommands.push(this.currentCommand);
-                        this.history.addCommand(this.currentCommand);
+                        this.surface.clear();
                         this.currentCommand = { points: [] };
+                        this.teacherCommands = [{ extra: 'clear' }];
+                        this.history.clear();
                         return [4, httpClient["a" /* httpClient */].post('addCommands', this.teacherCommands)];
                     case 1:
                         _a.sent();
@@ -3444,7 +3447,7 @@ var teacherStuff_TeacherStuff = (function () {
                         this.history.stepBack();
                         historyCommands = this.history.getCurrentCommands();
                         this.board.execCommands(historyCommands);
-                        this.teacherCommands.push({ points: [], extra: historyCommands.length ? 'undo' : 'clear' });
+                        this.teacherCommands.push({ extra: historyCommands.length ? 'undo' : 'clear' });
                         return [4, httpClient["a" /* httpClient */].post('addCommands', this.teacherCommands)];
                     case 1:
                         _a.sent();
@@ -4890,7 +4893,7 @@ var Device = (function () {
             isTouch: Device.isTouch,
             isFrame: Device.isFrame,
             isIPhone: Device.isIPhone,
-            buildAt: 1596972733198,
+            buildAt: 1596983041400,
             embeddedEngine: Device.embeddedEngine,
         });
     };
@@ -5174,7 +5177,7 @@ var loadViaXmlHttp = function (urlRequest, onProgress) {
     if (!urlRequest.method)
         urlRequest.method = 'GET';
     var xhr = new XMLHttpRequest();
-    xhr.open(urlRequest.method, addUrlParameter(urlRequest.url, 'modified', 1596972733278), true);
+    xhr.open(urlRequest.method, addUrlParameter(urlRequest.url, 'modified', 1596983041768), true);
     xhr.responseType = urlRequest.responseType;
     if (xhr.responseType === 'blob') {
         xhr.setRequestHeader('Accept-Ranges', 'bytes');
@@ -11556,7 +11559,7 @@ if (true) {
 }
 if (true) {
     var now = Date.now();
-    var passed = now - 1596972731210;
+    var passed = now - 1596983039806;
     console.log("last compiled " + passed / 1000 + " sec ago");
 }
 var MainLoop = (function () {

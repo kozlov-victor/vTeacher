@@ -13,7 +13,7 @@ async function bootstrap() {
 
   app.useStaticAssets(join(__dirname, '..', 'static'));
   app.setBaseViewsDir(join(__dirname, '..', 'static'));
-  app.setViewEngine('html');
+  app.setViewEngine('hbs');
   app.use(compression());
   await app.listen(PORT);
 }

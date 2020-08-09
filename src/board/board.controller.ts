@@ -1,4 +1,4 @@
-import {Controller, Get, Post, Req, Res} from "@nestjs/common";
+import {Controller, Get, Post, Render, Req, Res} from "@nestjs/common";
 
 import {Request, Response} from "express";
 import {IClientCommand, ICommandRequest, IServerCommand} from "./board.model";
@@ -12,18 +12,12 @@ export class BoardController {
     private commands:IServerCommand[] = [];
     private lastUpdated:number = 0;
 
-    @Get('/student')
-    student(req: Request, @Res() res: Response) {
-        res.sendFile('index.html', {
-            root: './static'
-        })
-    }
-
-    @Get('/teacher')
-    teacher(req: Request, @Res() res: Response) {
-        res.sendFile('index.html', {
-            root: './static'
-        })
+    @Get(['/student','/teacher','/'])
+    @Render('index')
+    student() {
+        return {
+            appStartedAt: this.boardService.appStartedAt
+        }
     }
 
     @Get('/vTeacher.js')
